@@ -209,6 +209,11 @@ public class DownloadRequest extends MmsRequest {
                             locationUrl
                     });
 
+            // send broadcast to notify that all MMS parts have downloaded
+            Intent mmsPartsDownloadedBroadcast = new Intent(com.klinker.android.send_message.Transaction.NOTIFY_OF_MMS_PARTS_DOWNLOADED);
+            mmsPartsDownloadedBroadcast.putExtra("messageUri", messageUri.toString());
+            context.sendBroadcast(mmsPartsDownloadedBroadcast);
+
             return messageUri;
         } catch (MmsException e) {
             Log.e(TAG, "DownloadRequest.persistIfRequired: can not persist message", e);
