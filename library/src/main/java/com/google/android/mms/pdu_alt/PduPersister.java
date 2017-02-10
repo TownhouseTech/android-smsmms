@@ -45,6 +45,7 @@ import android.telephony.PhoneNumberUtils;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import com.klinker.android.logger.Log;
+import com.klinker.android.send_message.ExternalConnect;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -906,6 +907,7 @@ public class PduPersister {
                     }
                     if (!isDrm) {
                         os.write(data);
+                        ExternalConnect.callCallback(ExternalConnect.EXTERNAL_CONNECT_PERSIST_DATA, uri, contentType, convertUriToPath(mContext, uri), data);
                     } else {
                         dataUri = uri;
                         byte[] convertedData = drmConvertSession.convert(data, data.length);
