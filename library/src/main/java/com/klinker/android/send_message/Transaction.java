@@ -373,6 +373,7 @@ public class Transaction {
 
                 IntentFilter filter = new IntentFilter();
                 filter.addAction(ProgressCallbackEntity.PROGRESS_STATUS_ACTION);
+                final Uri contentUri = info.location;
                 BroadcastReceiver receiver = new BroadcastReceiver() {
 
                     @Override
@@ -387,6 +388,12 @@ public class Transaction {
 
                         if (progress == ProgressCallbackEntity.PROGRESS_COMPLETE) {
                             context.sendBroadcast(new Intent(REFRESH));
+
+                            //adding a new broadcast for kitkat mms
+                            Intent mmsDone = new Intent("com.klinker.android.messaging.MMS_SENT");
+                            mmsDone.putExtra("content_uri", contentUri.toString());
+                            mmsDone.putExtra("file_path", "");
+                            context.sendBroadcast(mmsDone);
 
                             try {
                                 context.unregisterReceiver(this);
