@@ -167,54 +167,8 @@ public class PushReceiver extends BroadcastReceiver {
                                     group,
                                     null);
 
-                            String location = getContentLocation(mContext, uri);
-                            if (downloadedUrls.contains(location)) {
-                                Log.v(TAG, "already added this download, don't download again");
-                                return null;
-                            } else {
-                                downloadedUrls.add(location);
-                            }
-
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                Log.v(TAG, "receiving on a lollipop+ device");
-                                boolean useSystem = true;
-
-                                if (com.klinker.android.send_message.Transaction.settings != null) {
-                                    useSystem = com.klinker.android.send_message.Transaction.settings
-                                            .getUseSystemSending();
-                                } else {
-                                    useSystem = PreferenceManager.getDefaultSharedPreferences(mContext)
-                                            .getBoolean("system_mms_sending", useSystem);
-                                }
-
-                                if (useSystem) {
-                                    DownloadManager.getInstance().downloadMultimediaMessage(mContext, location);
-                                } else {
-                                    Log.v(TAG, "receiving with lollipop method");
-                                    MmsRequestManager requestManager = new MmsRequestManager(mContext);
-                                    DownloadRequest request = new DownloadRequest(requestManager,
-                                            Utils.getDefaultSubscriptionId(),
-                                            location, uri, null, null,
-                                            null, mContext);
-                                    MmsNetworkManager manager = new MmsNetworkManager(mContext, Utils.getDefaultSubscriptionId());
-                                    request.execute(mContext, manager);
-                                }
-                            } else {
-                                if (NotificationTransaction.allowAutoDownload(mContext)) {
-                                    // Start service to finish the notification transaction.
-                                    Intent svc = new Intent(mContext, TransactionService.class);
-                                    svc.putExtra(TransactionBundle.URI, uri.toString());
-                                    svc.putExtra(TransactionBundle.TRANSACTION_TYPE,
-                                            Transaction.NOTIFICATION_TRANSACTION);
-                                    svc.putExtra(TransactionBundle.LOLLIPOP_RECEIVING,
-                                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
-                                    mContext.startService(svc);
-                                } else {
-                                    Intent notificationBroadcast = new Intent(com.klinker.android.send_message.Transaction.NOTIFY_OF_MMS);
-                                    notificationBroadcast.putExtra("receive_through_stock", true);
-                                    mContext.sendBroadcast(notificationBroadcast);
-                                }
-                            }
+                            Log.i("download", uri.toString());
+                            downloadMms(mContext, uri);
                         } else if (LOCAL_LOGV) {
                             Log.v(TAG, "Skip downloading duplicate message: "
                                     + new String(nInd.getContentLocation()));
@@ -236,6 +190,8 @@ public class PushReceiver extends BroadcastReceiver {
 
             return null;
         }
+
+
     }
 
     @Override
@@ -269,6 +225,57 @@ public class PushReceiver extends BroadcastReceiver {
                 context.sendBroadcast(notificationBroadcast);
 
                 Log.v("mms_receiver", context.getPackageName() + " received and not aborted");
+            }
+        }
+    }
+
+    public static void downloadMms(Context context, Uri uri) throws MmsException {
+        String location = getContentLocation(context, uri);
+        if (downloadedUrls.contains(location)) {
+            Log.v(TAG, "already added this download, don't download again");
+            return;
+        } else {
+            downloadedUrls.add(location);
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Log.v(TAG, "receiving on a lollipop+ device");
+            boolean useSystem = true;
+
+            if (com.klinker.android.send_message.Transaction.settings != null) {
+                useSystem = com.klinker.android.send_message.Transaction.settings
+                        .getUseSystemSending();
+            } else {
+                useSystem = PreferenceManager.getDefaultSharedPreferences(context)
+                        .getBoolean("system_mms_sending", useSystem);
+            }
+
+            if (useSystem) {
+                DownloadManager.getInstance().downloadMultimediaMessage(context, location);
+            } else {
+                Log.v(TAG, "receiving with lollipop method");
+                MmsRequestManager requestManager = new MmsRequestManager(context);
+                DownloadRequest request = new DownloadRequest(requestManager,
+                        Utils.getDefaultSubscriptionId(),
+                        location, uri, null, null,
+                        null, context);
+                MmsNetworkManager manager = new MmsNetworkManager(context, Utils.getDefaultSubscriptionId());
+                request.execute(context, manager);
+            }
+        } else {
+            if (NotificationTransaction.allowAutoDownload(context)) {
+                // Start service to finish the notification transaction.
+                Intent svc = new Intent(context, TransactionService.class);
+                svc.putExtra(TransactionBundle.URI, uri.toString());
+                svc.putExtra(TransactionBundle.TRANSACTION_TYPE,
+                        Transaction.NOTIFICATION_TRANSACTION);
+                svc.putExtra(TransactionBundle.LOLLIPOP_RECEIVING,
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
+                context.startService(svc);
+            } else {
+                Intent notificationBroadcast = new Intent(com.klinker.android.send_message.Transaction.NOTIFY_OF_MMS);
+                notificationBroadcast.putExtra("receive_through_stock", true);
+                context.sendBroadcast(notificationBroadcast);
             }
         }
     }
