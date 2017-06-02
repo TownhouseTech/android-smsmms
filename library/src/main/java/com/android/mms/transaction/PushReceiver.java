@@ -167,7 +167,7 @@ public class PushReceiver extends BroadcastReceiver {
                                     group,
                                     null);
 
-                            Log.i("download", uri.toString());
+                            android.util.Log.i("download", uri.toString());
                             downloadMms(mContext, uri);
                         } else if (LOCAL_LOGV) {
                             Log.v(TAG, "Skip downloading duplicate message: "
