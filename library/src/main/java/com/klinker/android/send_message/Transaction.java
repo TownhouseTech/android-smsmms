@@ -138,14 +138,14 @@ public class Transaction {
             try { Looper.prepare(); } catch (Exception e) { }
             RateController.init(context);
             DownloadManager.init(context);
-            sendMmsMessage(message.getText(), message.getAddresses(), message.getImages(), message.getImageNames(), message.getParts(), message.getSubject());
+            sendMmsMessage(message.getText(), message.getAddresses(), message.getImages(), message.getImageNames(), message.getParts(), message.getSubject(), message.getKey());
         } else {
-            sendSmsMessage(message.getText(), message.getAddresses(), threadId, message.getDelay());
+            sendSmsMessage(message.getText(), message.getAddresses(), threadId, message.getDelay(), message.getKey());
         }
 
     }
 
-    private void sendSmsMessage(String text, String[] addresses, long threadId, int delay) {
+    private void sendSmsMessage(String text, String[] addresses, long threadId, int delay, String key) {
         Log.v("send_transaction", "message text: " + text);
         Uri messageUri = null;
         int messageId = 0;
@@ -175,6 +175,8 @@ public class Transaction {
 
                 values.put("thread_id", threadId);
                 messageUri = context.getContentResolver().insert(Uri.parse("content://sms/"), values);
+
+                broadcastKeyToUri(context, key, messageUri);
 
                 Log.v("send_transaction", "inserted to uri: " + messageUri);
 
@@ -313,7 +315,7 @@ public class Transaction {
         }
     }
 
-    private void sendMmsMessage(String text, String[] addresses, Bitmap[] image, String[] imageNames, List<Message.Part> parts, String subject) {
+    private void sendMmsMessage(String text, String[] addresses, Bitmap[] image, String[] imageNames, List<Message.Part> parts, String subject, String key) {
         // merge the string[] of addresses into a single string so they can be inserted into the database easier
         String address = "";
 
@@ -420,7 +422,7 @@ public class Transaction {
 
             if (settings.getUseSystemSending()) {
                 Log.v(TAG, "using system method for sending");
-                sendMmsThroughSystem(context, subject, data, addresses);
+                sendMmsThroughSystem(context, subject, data, addresses, key);
             } else {
                 try {
                     MessageInfo info = getBytes(context, saveMessage, address.split(" "),
@@ -563,7 +565,7 @@ public class Transaction {
     public static final int DEFAULT_PRIORITY = PduHeaders.PRIORITY_NORMAL;
 
     private static void sendMmsThroughSystem(Context context, String subject, List<MMSPart> parts,
-                                             String[] addresses) {
+                                             String[] addresses, String key) {
         try {
             final String fileName = "send." + String.valueOf(Math.abs(new Random().nextLong())) + ".dat";
             File mSendFile = new File(context.getCacheDir(), fileName);
@@ -572,6 +574,8 @@ public class Transaction {
             PduPersister persister = PduPersister.getPduPersister(context);
             Uri messageUri = persister.persist(sendReq, Uri.parse("content://mms/outbox"),
                     true, settings.getGroup(), null);
+
+            broadcastKeyToUri(context, key, messageUri);
 
             int messageId = 0;
             Cursor query = context.getContentResolver().query(messageUri, new String[] {"_id"}, null, null, null);
@@ -874,6 +878,13 @@ public class Transaction {
                 (settings.getSendLongAsMms() && Utils.getNumPages(settings, message.getText()) > settings.getSendLongAsMmsAfter()) ||
                 (message.getAddresses().length > 1 && settings.getGroup()) ||
                 message.getSubject() != null;
+    }
+
+    private static void broadcastKeyToUri(Context context, String key, Uri messageUri) {
+        Intent keyToUri = new Intent("com.klinker.android.messaging.KEY_TO_URI");
+        keyToUri.putExtra("uri", messageUri.toString());
+        keyToUri.putExtra("key", key);
+        context.sendBroadcast(keyToUri);
     }
 
 }

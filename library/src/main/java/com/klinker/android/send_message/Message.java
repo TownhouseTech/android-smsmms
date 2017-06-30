@@ -60,6 +60,7 @@ public class Message {
     private List<Part> parts = new ArrayList<Part>();
     private boolean save;
     private int delay;
+    private String key;
 
     /**
      * Default constructor
@@ -494,5 +495,23 @@ public class Message {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         image.compress(Bitmap.CompressFormat.JPEG, 90, stream);
         return stream.toByteArray();
+    }
+
+    /**
+     * Sets the reference key for the message
+     *
+     * @param key the key of the reference message
+     */
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    /**
+     * Gets the reference key for the message
+     *
+     * @return the reference key for the message
+     */
+    public String getKey() {
+        return this.key;
     }
 }
