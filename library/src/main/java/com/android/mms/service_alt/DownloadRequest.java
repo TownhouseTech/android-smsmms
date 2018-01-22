@@ -116,8 +116,8 @@ public class DownloadRequest extends MmsRequest {
 
     public static Uri persist(Context context, byte[] response, MmsConfig.Overridden mmsConfig,
                               String locationUrl, int subId, String creator) {
-        String originalMessageId = locationUrl.substring(locationUrl.lastIndexOf("%"));
-        locationUrl = locationUrl.substring(0, locationUrl.lastIndexOf("%") - 1);
+        String originalMessageId = locationUrl.substring(locationUrl.lastIndexOf("%") + 1);
+        locationUrl = locationUrl.substring(0, locationUrl.lastIndexOf("%"));
         // Let any mms apps running as secondary user know that a new mms has been downloaded.
         notifyOfDownload(context);
 
@@ -214,7 +214,7 @@ public class DownloadRequest extends MmsRequest {
             // send broadcast to notify that all MMS parts have downloaded
             Intent mmsPartsDownloadedBroadcast = new Intent(com.klinker.android.send_message.Transaction.NOTIFY_OF_MMS_PARTS_DOWNLOADED);
             mmsPartsDownloadedBroadcast.putExtra("messageUri", messageUri.toString());
-            mmsPartsDownloadedBroadcast.putExtra("originalMessageUri", originalMessageId);
+            mmsPartsDownloadedBroadcast.putExtra("originalMessageId", originalMessageId);
             context.sendBroadcast(mmsPartsDownloadedBroadcast);
 
             return messageUri;
