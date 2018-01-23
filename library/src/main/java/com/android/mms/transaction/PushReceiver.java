@@ -141,7 +141,7 @@ public class PushReceiver extends BroadcastReceiver {
                             if ('=' == contentLocation[contentLocation.length - 1]) {
                                 byte [] transactionId = nInd.getTransactionId();
                                 byte [] contentLocationWithId = new byte [contentLocation.length
-                                                                          + transactionId.length];
+                                        + transactionId.length];
                                 System.arraycopy(contentLocation, 0, contentLocationWithId,
                                         0, contentLocation.length);
                                 System.arraycopy(transactionId, 0, contentLocationWithId,
@@ -194,8 +194,8 @@ public class PushReceiver extends BroadcastReceiver {
                                     MmsRequestManager requestManager = new MmsRequestManager(mContext);
                                     DownloadRequest request = new DownloadRequest(requestManager,
                                             Utils.getDefaultSubscriptionId(),
-                                            location, uri, null, null,
-                                            null, mContext);
+                                            location, intent.getStringExtra(DownloadRequest.EXTRA_ORIGINAL_MESSAGE_ID),
+                                            uri, null, null, null, mContext);
                                     MmsNetworkManager manager = new MmsNetworkManager(mContext, Utils.getDefaultSubscriptionId());
                                     request.execute(mContext, manager);
                                 }
@@ -314,8 +314,8 @@ public class PushReceiver extends BroadcastReceiver {
         // sb.append(')');
 
         Cursor cursor = SqliteWrapper.query(context, context.getContentResolver(),
-                            Mms.CONTENT_URI, new String[] { Mms.THREAD_ID },
-                            sb.toString(), null, null);
+                Mms.CONTENT_URI, new String[] { Mms.THREAD_ID },
+                sb.toString(), null, null);
         if (cursor != null) {
             try {
                 if ((cursor.getCount() == 1) && cursor.moveToFirst()) {
