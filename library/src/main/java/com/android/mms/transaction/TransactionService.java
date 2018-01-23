@@ -338,8 +338,9 @@ public class TransactionService extends Service implements Observer {
                                     MmsRequestManager requestManager = new MmsRequestManager(this);
                                     DownloadRequest request = new DownloadRequest(requestManager,
                                             Utils.getDefaultSubscriptionId(),
-                                            PushReceiver.getContentLocation(this, uri), uri, null, null,
-                                            null, this);
+                                            PushReceiver.getContentLocation(this, uri),
+                                            intent.getStringExtra(DownloadRequest.EXTRA_ORIGINAL_MESSAGE_ID),
+                                            uri, null, null, null, this);
                                     MmsNetworkManager manager = new MmsNetworkManager(this, Utils.getDefaultSubscriptionId());
                                     request.execute(this, manager);
 
@@ -411,7 +412,7 @@ public class TransactionService extends Service implements Observer {
                                 if (Log.isLoggable(LogTag.TRANSACTION, Log.VERBOSE)) {
                                     Log.v(TAG, "onNewIntent: falling through and processing");
                                 }
-                               // fall-through
+                                // fall-through
                             default:
                                 Uri uri = ContentUris.withAppendedId(
                                         Mms.CONTENT_URI,
@@ -806,7 +807,7 @@ public class TransactionService extends Service implements Observer {
                                     mmsc, args.getProxyAddress(), args.getProxyPort());
                         } else {
                             transactionSettings = new TransactionSettings(
-                                                    TransactionService.this, null);
+                                    TransactionService.this, null);
                         }
 
                         int transactionType = args.getTransactionType();
@@ -940,7 +941,7 @@ public class TransactionService extends Service implements Observer {
         }
 
         public void processPendingTransaction(Transaction transaction,
-                                               TransactionSettings settings) {
+                                              TransactionSettings settings) {
 
             if (Log.isLoggable(LogTag.TRANSACTION, Log.VERBOSE)) {
                 Log.v(TAG, "processPendingTxn: transaction=" + transaction);
@@ -1054,12 +1055,12 @@ public class TransactionService extends Service implements Observer {
                         Log.v(TAG, "Adding transaction to 'mProcessing' list: " + transaction);
                     }
                     mProcessing.add(transaction);
-               }
+                }
             }
 
             // Set a timer to keep renewing our "lease" on the MMS connection
             sendMessageDelayed(obtainMessage(EVENT_CONTINUE_MMS_CONNECTIVITY),
-                               APN_EXTENSION_WAIT);
+                    APN_EXTENSION_WAIT);
 
             if (Log.isLoggable(LogTag.TRANSACTION, Log.VERBOSE)) {
                 Log.v(TAG, "processTransaction: starting transaction " + transaction);
@@ -1076,7 +1077,7 @@ public class TransactionService extends Service implements Observer {
         // Set a timer to keep renewing our "lease" on the MMS connection
         mServiceHandler.sendMessageDelayed(
                 mServiceHandler.obtainMessage(EVENT_CONTINUE_MMS_CONNECTIVITY),
-                           APN_EXTENSION_WAIT);
+                APN_EXTENSION_WAIT);
     }
 
     private class ConnectivityBroadcastReceiver extends BroadcastReceiver {

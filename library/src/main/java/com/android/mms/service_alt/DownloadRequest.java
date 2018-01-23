@@ -57,13 +57,17 @@ public class DownloadRequest extends MmsRequest {
     // The indexes of the columns which must be consistent with above PROJECTION.
     static final int COLUMN_CONTENT_LOCATION      = 0;
 
+    private static final String EXTRA_MESSAGE_URI = "message_uri";
+    public static final String EXTRA_ORIGINAL_MESSAGE_ID = "original_message_id";
+
     private final String mLocationUrl;
     private final PendingIntent mDownloadedIntent;
     private final Uri mContentUri;
+    private final String mOriginalMessageId;
 
-    public DownloadRequest(RequestManager manager, int subId, String locationUrl,
-            Uri contentUri, PendingIntent downloadedIntent, String creator,
-            Bundle configOverrides, Context context) throws MmsException {
+    public DownloadRequest(RequestManager manager, int subId, String locationUrl, String originalMessageId,
+                           Uri contentUri, PendingIntent downloadedIntent, String creator,
+                           Bundle configOverrides, Context context) throws MmsException {
         super(manager, subId, creator, configOverrides);
 
         if (locationUrl == null) {
@@ -72,6 +76,7 @@ public class DownloadRequest extends MmsRequest {
             mLocationUrl = locationUrl;
         }
 
+        mOriginalMessageId = originalMessageId;
         mDownloadedIntent = downloadedIntent;
         mContentUri = contentUri;
     }
@@ -111,11 +116,11 @@ public class DownloadRequest extends MmsRequest {
             return null;
         }
 
-        return persist(context, response, mMmsConfig, mLocationUrl, mSubId, mCreator);
+        return persist(context, response, mMmsConfig, mLocationUrl, mOriginalMessageId, mSubId, mCreator);
     }
 
     public static Uri persist(Context context, byte[] response, MmsConfig.Overridden mmsConfig,
-                              String locationUrl, int subId, String creator) {
+                              String locationUrl, String originalMessageId, int subId, String creator) {
         // Let any mms apps running as secondary user know that a new mms has been downloaded.
         notifyOfDownload(context);
 
@@ -211,7 +216,8 @@ public class DownloadRequest extends MmsRequest {
 
             // send broadcast to notify that all MMS parts have downloaded
             Intent mmsPartsDownloadedBroadcast = new Intent(com.klinker.android.send_message.Transaction.NOTIFY_OF_MMS_PARTS_DOWNLOADED);
-            mmsPartsDownloadedBroadcast.putExtra("messageUri", messageUri.toString());
+            mmsPartsDownloadedBroadcast.putExtra(EXTRA_MESSAGE_URI, messageUri.toString());
+            mmsPartsDownloadedBroadcast.putExtra(EXTRA_ORIGINAL_MESSAGE_ID, originalMessageId);
             context.sendBroadcast(mmsPartsDownloadedBroadcast);
 
             return messageUri;

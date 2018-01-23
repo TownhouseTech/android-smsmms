@@ -62,6 +62,7 @@ public class MmsReceivedReceiver extends BroadcastReceiver {
             DownloadRequest.persist(context, response,
                     new MmsConfig.Overridden(new MmsConfig(context), null),
                     intent.getStringExtra(EXTRA_LOCATION_URL),
+                    intent.getStringExtra(DownloadRequest.EXTRA_ORIGINAL_MESSAGE_ID),
                     Utils.getDefaultSubscriptionId(), null);
 
             Log.v(TAG, "response saved successfully");
