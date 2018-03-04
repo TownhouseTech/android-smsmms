@@ -340,12 +340,13 @@ public class Transaction {
         // add any extra media according to their mimeType set in the message
         //      eg. videos, audio, contact cards, location maybe?
         if (parts != null) {
+            int i = 0;
             for (Message.Part p : parts) {
                 MMSPart part = new MMSPart();
                 if (p.getName() != null) {
                     part.Name = p.getName();
                 } else {
-                    part.Name = p.getContentType().split("/")[0];
+                    part.Name = p.getContentType().split("/")[0].concat(String.valueOf(i++));
                 }
                 part.MimeType = p.getContentType();
                 part.Data = p.getMedia();
