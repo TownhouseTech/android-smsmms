@@ -39,7 +39,6 @@ public class Message {
             this.contentType = contentType;
             this.name = name;
         }
-
         public byte[] getMedia() {
             return media;
         }
@@ -60,6 +59,7 @@ public class Message {
     private List<Part> parts = new ArrayList<Part>();
     private boolean save;
     private int delay;
+    private String originalId;
 
     /**
      * Default constructor
@@ -365,6 +365,8 @@ public class Message {
         this.delay = delay;
     }
 
+    public void setOriginalId(String originalId) { this.originalId = originalId; }
+
     /**
      * Method to add another recipient to the object
      *
@@ -478,6 +480,9 @@ public class Message {
     public int getDelay() {
         return this.delay;
     }
+
+
+    public String getOriginalId() { return originalId; }
 
     /**
      * Static method to convert a bitmap into a byte array to easily send it over http

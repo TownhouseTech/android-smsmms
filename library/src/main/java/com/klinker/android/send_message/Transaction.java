@@ -138,14 +138,14 @@ public class Transaction {
             try { Looper.prepare(); } catch (Exception e) { }
             RateController.init(context);
             DownloadManager.init(context);
-            sendMmsMessage(message.getText(), message.getAddresses(), message.getImages(), message.getImageNames(), message.getParts(), message.getSubject());
+            sendMmsMessage(message.getText(), message.getAddresses(), message.getImages(), message.getImageNames(), message.getParts(), message.getSubject(), message.getOriginalId());
         } else {
-            sendSmsMessage(message.getText(), message.getAddresses(), threadId, message.getDelay());
+            sendSmsMessage(message.getText(), message.getAddresses(), threadId, message.getDelay(), message.getOriginalId());
         }
 
     }
 
-    private void sendSmsMessage(String text, String[] addresses, long threadId, int delay) {
+    private void sendSmsMessage(String text, String[] addresses, long threadId, int delay, String originalId) {
         Log.v("send_transaction", "message text: " + text);
         Uri messageUri = null;
         int messageId = 0;
@@ -187,8 +187,11 @@ public class Transaction {
                 Log.v("send_transaction", "message id: " + messageId);
 
                 // set up sent and delivered pending intents to be used with message request
-                PendingIntent sentPI = PendingIntent.getBroadcast(context, messageId, new Intent(SMS_SENT)
-                        .putExtra("message_uri", messageUri == null ? "" : messageUri.toString()), PendingIntent.FLAG_UPDATE_CURRENT);
+                Intent sentIntent = new Intent(SMS_SENT)
+                        .putExtra("message_uri", messageUri == null ? "" : messageUri.toString());
+                if (originalId != null)
+                    sentIntent.putExtra("original_message_id", originalId);
+                PendingIntent sentPI = PendingIntent.getBroadcast(context, messageId, sentIntent, PendingIntent.FLAG_UPDATE_CURRENT);
                 PendingIntent deliveredPI = PendingIntent.getBroadcast(context, messageId, new Intent(SMS_DELIVERED)
                         .putExtra("message_uri", messageUri == null ? "" : messageUri.toString()), PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -313,7 +316,7 @@ public class Transaction {
         }
     }
 
-    private void sendMmsMessage(String text, String[] addresses, Bitmap[] image, String[] imageNames, List<Message.Part> parts, String subject) {
+    private void sendMmsMessage(String text, String[] addresses, Bitmap[] image, String[] imageNames, List<Message.Part> parts, String subject, final String originalId) {
         // merge the string[] of addresses into a single string so they can be inserted into the database easier
         String address = "";
 
@@ -393,6 +396,8 @@ public class Transaction {
                             Intent mmsDone = new Intent("com.klinker.android.messaging.MMS_SENT");
                             mmsDone.putExtra("content_uri", contentUri.toString());
                             mmsDone.putExtra("file_path", "");
+                            if (originalId != null)
+                                mmsDone.putExtra("original_message_id", originalId);
                             context.sendBroadcast(mmsDone);
 
                             try {
