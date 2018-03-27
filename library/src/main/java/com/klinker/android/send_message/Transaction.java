@@ -326,6 +326,15 @@ public class Transaction {
         // create the parts to send
         ArrayList<MMSPart> data = new ArrayList<MMSPart>();
 
+        if (!text.equals("")) {
+            // add text to the end of the part and send
+            MMSPart part = new MMSPart();
+            part.Name = "text";
+            part.MimeType = "text/plain";
+            part.Data = text.getBytes();
+            data.add(part);
+        }
+
         for (int i = 0; i < image.length; i++) {
             // turn bitmap into byte array to be stored
             byte[] imageBytes = Message.bitmapToByteArray(image[i]);
@@ -351,15 +360,6 @@ public class Transaction {
                 part.Data = p.getMedia();
                 data.add(part);
             }
-        }
-
-        if (!text.equals("")) {
-            // add text to the end of the part and send
-            MMSPart part = new MMSPart();
-            part.Name = "text";
-            part.MimeType = "text/plain";
-            part.Data = text.getBytes();
-            data.add(part);
         }
 
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
