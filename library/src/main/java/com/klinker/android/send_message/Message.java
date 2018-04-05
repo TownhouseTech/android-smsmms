@@ -30,6 +30,14 @@ import java.util.List;
  */
 public class Message {
 
+    public long getOriginalId() {
+        return originalId;
+    }
+
+    public void setOriginalId(long originalId) {
+        this.originalId = originalId;
+    }
+
     public static final class Part {
         private byte[] media;
         private String contentType;
@@ -60,6 +68,7 @@ public class Message {
     private List<Part> parts = new ArrayList<Part>();
     private boolean save;
     private int delay;
+    private long originalId;
 
     /**
      * Default constructor

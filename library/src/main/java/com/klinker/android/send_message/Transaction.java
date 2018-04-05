@@ -140,12 +140,12 @@ public class Transaction {
             DownloadManager.init(context);
             sendMmsMessage(message.getText(), message.getAddresses(), message.getImages(), message.getImageNames(), message.getParts(), message.getSubject());
         } else {
-            sendSmsMessage(message.getText(), message.getAddresses(), threadId, message.getDelay());
+            sendSmsMessage(message.getText(), message.getAddresses(), threadId, message.getOriginalId(), message.getDelay());
         }
 
     }
 
-    private void sendSmsMessage(String text, String[] addresses, long threadId, int delay) {
+    private void sendSmsMessage(String text, String[] addresses, long threadId, long originalId, int delay) {
         Log.v("send_transaction", "message text: " + text);
         Uri messageUri = null;
         int messageId = 0;
@@ -183,6 +183,11 @@ public class Transaction {
                     messageId = query.getInt(0);
                     query.close();
                 }
+                Intent message_id_changed = new Intent("message_id_changed");
+                message_id_changed.putExtra("original_id", originalId);
+                message_id_changed.putExtra("message_id", messageId);
+
+                context.sendBroadcast(message_id_changed);
 
                 Log.v("send_transaction", "message id: " + messageId);
 
