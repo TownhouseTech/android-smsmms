@@ -148,7 +148,7 @@ public class Transaction {
     private void sendSmsMessage(String text, String[] addresses, long threadId, long originalId, int delay) {
         Log.v("send_transaction", "message text: " + text);
         Uri messageUri = null;
-        int messageId = 0;
+        long messageId = 0;
         if (saveMessage) {
             Log.v("send_transaction", "saving message");
             // add signature to original text to be saved in database (does not strip unicode for saving though)
@@ -180,7 +180,7 @@ public class Transaction {
 
                 Cursor query = context.getContentResolver().query(messageUri, new String[] {"_id"}, null, null, null);
                 if (query != null && query.moveToFirst()) {
-                    messageId = query.getInt(0);
+                    messageId = query.getLong(0);
                     query.close();
                 }
                 Intent message_id_changed = new Intent("message_id_changed");
