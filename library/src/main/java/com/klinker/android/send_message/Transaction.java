@@ -192,9 +192,14 @@ public class Transaction {
                 Log.v("send_transaction", "message id: " + messageId);
 
                 // set up sent and delivered pending intents to be used with message request
-                PendingIntent sentPI = PendingIntent.getBroadcast(context, messageId, new Intent(SMS_SENT)
+                Intent sentIntent = new Intent(SMS_SENT)
+                        .putExtra("message_uri", messageUri == null ? "" : messageUri.toString());
+                if (originalId != 0)
+                    sentIntent.putExtra("original_message_id", originalId);
+
+                PendingIntent sentPI = PendingIntent.getBroadcast(context, (int)messageId, new Intent(SMS_SENT)
                         .putExtra("message_uri", messageUri == null ? "" : messageUri.toString()), PendingIntent.FLAG_UPDATE_CURRENT);
-                PendingIntent deliveredPI = PendingIntent.getBroadcast(context, messageId, new Intent(SMS_DELIVERED)
+                PendingIntent deliveredPI = PendingIntent.getBroadcast(context, (int)messageId, new Intent(SMS_DELIVERED)
                         .putExtra("message_uri", messageUri == null ? "" : messageUri.toString()), PendingIntent.FLAG_UPDATE_CURRENT);
 
                 ArrayList<PendingIntent> sPI = new ArrayList<PendingIntent>();
