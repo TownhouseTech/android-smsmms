@@ -575,10 +575,10 @@ public class Transaction {
             Uri messageUri = persister.persist(sendReq, Uri.parse("content://mms/outbox"),
                     true, settings.getGroup(), null);
 
-            int messageId = 0;
+            long messageId = 0;
             Cursor query = context.getContentResolver().query(messageUri, new String[] {"_id"}, null, null, null);
             if (query != null && query.moveToFirst()) {
-                messageId = query.getInt(0);
+                messageId = query.getLong(0);
                 query.close();
             }
 
@@ -591,7 +591,7 @@ public class Transaction {
             intent.putExtra(MmsSentReceiver.EXTRA_CONTENT_URI, messageUri.toString());
             intent.putExtra(MmsSentReceiver.EXTRA_FILE_PATH, mSendFile.getPath());
             final PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                    context, messageId, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+                    context, (int)messageId, intent, PendingIntent.FLAG_CANCEL_CURRENT);
 
             Uri writerUri = (new Uri.Builder())
                     .authority(context.getPackageName() + ".MmsFileProvider")
