@@ -178,6 +178,7 @@ public class Transaction {
                 Intent message_id_changed = new Intent("message_id_changed");
                 message_id_changed.putExtra("original_id", originalId);
                 message_id_changed.putExtra("message_id", messageId);
+                message_id_changed.putExtra("is_mms", false);
 
                 context.sendBroadcast(message_id_changed);
 
@@ -585,6 +586,7 @@ public class Transaction {
             Intent message_id_changed = new Intent("message_id_changed");
             message_id_changed.putExtra("original_id", originalId);
             message_id_changed.putExtra("message_id", messageId);
+            message_id_changed.putExtra("is_mms", true);
             context.sendBroadcast(message_id_changed);
 
             Intent intent = new Intent(MmsSentReceiver.MMS_SENT);
