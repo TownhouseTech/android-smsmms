@@ -21,18 +21,12 @@ import android.app.PendingIntent;
 import android.content.*;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Looper;
-import android.telephony.PhoneNumberUtils;
 import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
-import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
 import com.android.mms.MmsConfig;
@@ -42,7 +36,6 @@ import com.android.mms.service_alt.SendRequest;
 import com.klinker.android.logger.Log;
 import android.widget.Toast;
 import com.android.mms.dom.smil.parser.SmilXmlSerializer;
-import com.android.mms.transaction.HttpUtils;
 import com.android.mms.transaction.MmsMessageSender;
 import com.android.mms.transaction.ProgressCallbackEntity;
 import com.android.mms.util.DownloadManager;
@@ -58,7 +51,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Class to process transaction requests for sending
@@ -138,17 +130,17 @@ public class Transaction {
             try { Looper.prepare(); } catch (Exception e) { }
             RateController.init(context);
             DownloadManager.init(context);
-            sendMmsMessage(message.getText(), message.getAddresses(), message.getImages(), message.getImageNames(), message.getParts(), message.getSubject());
+            sendMmsMessage(message.getText(), message.getAddresses(), message.getImages(), message.getImageNames(), message.getParts(), message.getSubject(), message.getOriginalId());
         } else {
-            sendSmsMessage(message.getText(), message.getAddresses(), threadId, message.getDelay());
+            sendSmsMessage(message.getText(), message.getAddresses(), threadId, message.getOriginalId(), message.getDelay());
         }
 
     }
 
-    private void sendSmsMessage(String text, String[] addresses, long threadId, int delay) {
+    private void sendSmsMessage(String text, String[] addresses, long threadId, long originalId, int delay) {
         Log.v("send_transaction", "message text: " + text);
         Uri messageUri = null;
-        int messageId = 0;
+        long messageId = 0;
         if (saveMessage) {
             Log.v("send_transaction", "saving message");
             // add signature to original text to be saved in database (does not strip unicode for saving though)
@@ -180,16 +172,27 @@ public class Transaction {
 
                 Cursor query = context.getContentResolver().query(messageUri, new String[] {"_id"}, null, null, null);
                 if (query != null && query.moveToFirst()) {
-                    messageId = query.getInt(0);
+                    messageId = query.getLong(0);
                     query.close();
                 }
+                Intent message_id_changed = new Intent("message_id_changed");
+                message_id_changed.putExtra("original_id", originalId);
+                message_id_changed.putExtra("message_id", messageId);
+                message_id_changed.putExtra("is_mms", false);
+
+                context.sendBroadcast(message_id_changed);
 
                 Log.v("send_transaction", "message id: " + messageId);
 
                 // set up sent and delivered pending intents to be used with message request
-                PendingIntent sentPI = PendingIntent.getBroadcast(context, messageId, new Intent(SMS_SENT)
+                Intent sentIntent = new Intent(SMS_SENT)
+                        .putExtra("message_uri", messageUri == null ? "" : messageUri.toString());
+                if (originalId != 0)
+                    sentIntent.putExtra("original_message_id", originalId);
+
+                PendingIntent sentPI = PendingIntent.getBroadcast(context, (int)messageId, new Intent(SMS_SENT)
                         .putExtra("message_uri", messageUri == null ? "" : messageUri.toString()), PendingIntent.FLAG_UPDATE_CURRENT);
-                PendingIntent deliveredPI = PendingIntent.getBroadcast(context, messageId, new Intent(SMS_DELIVERED)
+                PendingIntent deliveredPI = PendingIntent.getBroadcast(context, (int)messageId, new Intent(SMS_DELIVERED)
                         .putExtra("message_uri", messageUri == null ? "" : messageUri.toString()), PendingIntent.FLAG_UPDATE_CURRENT);
 
                 ArrayList<PendingIntent> sPI = new ArrayList<PendingIntent>();
@@ -313,7 +316,7 @@ public class Transaction {
         }
     }
 
-    private void sendMmsMessage(String text, String[] addresses, Bitmap[] image, String[] imageNames, List<Message.Part> parts, String subject) {
+    private void sendMmsMessage(String text, String[] addresses, Bitmap[] image, String[] imageNames, List<Message.Part> parts, String subject, long originalId) {
         // merge the string[] of addresses into a single string so they can be inserted into the database easier
         String address = "";
 
@@ -421,7 +424,7 @@ public class Transaction {
 
             if (settings.getUseSystemSending()) {
                 Log.v(TAG, "using system method for sending");
-                sendMmsThroughSystem(context, subject, data, addresses);
+                sendMmsThroughSystem(context, subject, data, addresses, originalId);
             } else {
                 try {
                     MessageInfo info = getBytes(context, saveMessage, address.split(" "),
@@ -564,7 +567,7 @@ public class Transaction {
     public static final int DEFAULT_PRIORITY = PduHeaders.PRIORITY_NORMAL;
 
     private static void sendMmsThroughSystem(Context context, String subject, List<MMSPart> parts,
-                                             String[] addresses) {
+                                             String[] addresses, long originalId) {
         try {
             final String fileName = "send." + String.valueOf(Math.abs(new Random().nextLong())) + ".dat";
             File mSendFile = new File(context.getCacheDir(), fileName);
@@ -574,18 +577,24 @@ public class Transaction {
             Uri messageUri = persister.persist(sendReq, Uri.parse("content://mms/outbox"),
                     true, settings.getGroup(), null);
 
-            int messageId = 0;
+            long messageId = 0;
             Cursor query = context.getContentResolver().query(messageUri, new String[] {"_id"}, null, null, null);
             if (query != null && query.moveToFirst()) {
-                messageId = query.getInt(0);
+                messageId = query.getLong(0);
                 query.close();
             }
+
+            Intent message_id_changed = new Intent("message_id_changed");
+            message_id_changed.putExtra("original_id", originalId);
+            message_id_changed.putExtra("message_id", messageId);
+            message_id_changed.putExtra("is_mms", true);
+            context.sendBroadcast(message_id_changed);
 
             Intent intent = new Intent(MmsSentReceiver.MMS_SENT);
             intent.putExtra(MmsSentReceiver.EXTRA_CONTENT_URI, messageUri.toString());
             intent.putExtra(MmsSentReceiver.EXTRA_FILE_PATH, mSendFile.getPath());
             final PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                    context, messageId, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+                    context, (int)messageId, intent, PendingIntent.FLAG_CANCEL_CURRENT);
 
             Uri writerUri = (new Uri.Builder())
                     .authority(context.getPackageName() + ".MmsFileProvider")
