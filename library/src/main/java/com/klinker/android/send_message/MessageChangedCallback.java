@@ -9,21 +9,11 @@ public interface MessageChangedCallback {
             this.originalThreadId = originalThreadId;
             this.newMessageId = newMessageId;
         }
-        boolean isMMS;
-        long originalMessageId;
-        long originalThreadId;
-        long newMessageId;
+        public boolean isMMS;
+        public long originalMessageId;
+        public long originalThreadId;
+        public long newMessageId;
     }
 
-    public static class OriginalMessageInfo {
-        public OriginalMessageInfo(long originalMessageId, long originalThreadId) {
-            this.originalMessageId = originalMessageId;
-            this.originalThreadId = originalThreadId;
-        }
-        long originalMessageId;
-        long originalThreadId;
-    }
-
-    public OriginalMessageInfo originalMessageInfo();
     public void messageChanged(MessageChangedInfo info);
 }

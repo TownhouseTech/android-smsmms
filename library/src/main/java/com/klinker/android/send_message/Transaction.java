@@ -179,7 +179,8 @@ public class Transaction {
                     messageId = query.getLong(0);
                     query.close();
                 }
-                messageChangedCallback.messageChanged(new MessageChangedCallback.MessageChangedInfo(false, originalId, threadId, messageId));
+                if (messageChangedCallback != null)
+                    messageChangedCallback.messageChanged(new MessageChangedCallback.MessageChangedInfo(false, originalId, threadId, messageId));
 
                 Log.v("send_transaction", "message id: " + messageId);
 
@@ -582,7 +583,8 @@ public class Transaction {
                 query.close();
             }
 
-            messageChangedCallback.messageChanged(new MessageChangedCallback.MessageChangedInfo(true, originalId, threadId, messageId));
+            if (messageChangedCallback != null)
+                messageChangedCallback.messageChanged(new MessageChangedCallback.MessageChangedInfo(true, originalId, threadId, messageId));
 
             Intent message_id_changed = new Intent("message_id_changed");
             message_id_changed.putExtra("original_id", originalId);
