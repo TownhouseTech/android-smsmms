@@ -30,14 +30,6 @@ import java.util.List;
  */
 public class Message {
 
-    public long getOriginalId() {
-        return originalId;
-    }
-
-    public void setOriginalId(long originalId) {
-        this.originalId = originalId;
-    }
-
     public static final class Part {
         private byte[] media;
         private String contentType;
@@ -504,4 +496,13 @@ public class Message {
         image.compress(Bitmap.CompressFormat.JPEG, 90, stream);
         return stream.toByteArray();
     }
+
+    public long getOriginalId() {
+        return this.originalId;
+    }
+
+    public void setOriginalId(long originalId) {
+        this.originalId = originalId;
+    }
+
 }
