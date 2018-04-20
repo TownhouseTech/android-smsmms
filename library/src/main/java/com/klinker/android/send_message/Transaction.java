@@ -77,6 +77,8 @@ public class Transaction {
     public static final String NOTIFY_OF_MMS_PARTS_DOWNLOADED = "com.klinker.android.messaging.MMS_PARTS_DOWNLOADED";
 
     public static final long NO_THREAD_ID = 0;
+    private MessageChangedCallback messageChangedCallback;
+    private long threadId;
 
     /**
      * Sets context and initializes settings to default values
@@ -112,7 +114,9 @@ public class Transaction {
      * @param message  is the message that you want to send
      * @param threadId is the thread id of who to send the message to (can also be set to Transaction.NO_THREAD_ID)
      */
-    public void sendNewMessage(Message message, long threadId) {
+    public void sendNewMessage(Message message, long threadId, MessageChangedCallback callback) {
+        this.threadId = threadId;
+        this.messageChangedCallback = callback;
         this.saveMessage = message.getSave();
 
         // if message:
@@ -175,12 +179,7 @@ public class Transaction {
                     messageId = query.getLong(0);
                     query.close();
                 }
-                Intent message_id_changed = new Intent("message_id_changed");
-                message_id_changed.putExtra("original_id", originalId);
-                message_id_changed.putExtra("message_id", messageId);
-                message_id_changed.putExtra("is_mms", false);
-
-                context.sendBroadcast(message_id_changed);
+                messageChangedCallback.messageChanged(new MessageChangedCallback.MessageChangedInfo(false, originalId, threadId, messageId));
 
                 Log.v("send_transaction", "message id: " + messageId);
 
@@ -565,7 +564,7 @@ public class Transaction {
     public static final long DEFAULT_EXPIRY_TIME = 7 * 24 * 60 * 60;
     public static final int DEFAULT_PRIORITY = PduHeaders.PRIORITY_NORMAL;
 
-    private static void sendMmsThroughSystem(Context context, String subject, List<MMSPart> parts,
+    private void sendMmsThroughSystem(Context context, String subject, List<MMSPart> parts,
                                              String[] addresses, long originalId) {
         try {
             final String fileName = "send." + String.valueOf(Math.abs(new Random().nextLong())) + ".dat";
@@ -582,6 +581,8 @@ public class Transaction {
                 messageId = query.getLong(0);
                 query.close();
             }
+
+            messageChangedCallback.messageChanged(new MessageChangedCallback.MessageChangedInfo(true, originalId, threadId, messageId));
 
             Intent message_id_changed = new Intent("message_id_changed");
             message_id_changed.putExtra("original_id", originalId);
