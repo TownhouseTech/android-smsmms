@@ -21,18 +21,12 @@ import android.app.PendingIntent;
 import android.content.*;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Looper;
-import android.telephony.PhoneNumberUtils;
 import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
-import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
 import com.android.mms.MmsConfig;
@@ -42,7 +36,6 @@ import com.android.mms.service_alt.SendRequest;
 import com.klinker.android.logger.Log;
 import android.widget.Toast;
 import com.android.mms.dom.smil.parser.SmilXmlSerializer;
-import com.android.mms.transaction.HttpUtils;
 import com.android.mms.transaction.MmsMessageSender;
 import com.android.mms.transaction.ProgressCallbackEntity;
 import com.android.mms.util.DownloadManager;
@@ -58,7 +51,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Class to process transaction requests for sending
@@ -92,7 +84,7 @@ public class Transaction {
      * @param context is the context of the activity or service
      */
     public Transaction(Context context) {
-        this(context, new Settings());
+        this(context, new Settings(context));
     }
 
     /**
@@ -614,7 +606,7 @@ public class Transaction {
             if (!TextUtils.isEmpty(httpParams)) {
                 configOverrides.putString(SmsManager.MMS_CONFIG_HTTP_PARAMS, httpParams);
             }
-            configOverrides.putInt(SmsManager.MMS_CONFIG_MAX_MESSAGE_SIZE, MmsConfig.getMaxMessageSize());
+            configOverrides.putInt(SmsManager.MMS_CONFIG_MAX_MESSAGE_SIZE, settings.getMaxMessageSize());
 
             if (contentUri != null) {
                 SmsManagerFactory.createSmsManager(settings).sendMultimediaMessage(context,

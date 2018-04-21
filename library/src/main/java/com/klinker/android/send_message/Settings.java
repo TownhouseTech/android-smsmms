@@ -16,10 +16,14 @@
 
 package com.klinker.android.send_message;
 
-import android.net.wifi.WifiInfo;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Build;
 
+import com.android.mms.MmsConfig;
 import com.klinker.android.logger.Log;
+
+import java.lang.ref.WeakReference;
 
 /**
  * Class to house all of the settings that can be used to send a message
@@ -29,6 +33,9 @@ import com.klinker.android.logger.Log;
 public class Settings {
 
     public static final int DEFAULT_SUBSCRIPTION_ID = -1;
+    private static WeakReference<Context> context;
+    static String savedSettings = "savedSettings";
+    static String maxMessageSizePrefName = "maxMessageSize";
 
     // MMS options
     private String mmsc;
@@ -39,6 +46,7 @@ public class Settings {
     private String uaProfTagName;
     private boolean group;
     private boolean useSystemSending;
+    private int maxMessageSize;
 
     // SMS options
     private boolean deliveryReports;
@@ -55,9 +63,10 @@ public class Settings {
 
     /**
      * Default constructor to set everything to default values
+     * @param context
      */
-    public Settings() {
-        this("", "", "0", true, false, false, false, false, "", "", true, 3, true, DEFAULT_SUBSCRIPTION_ID);
+    public Settings(Context context) {
+        this("", "", "0", true, false, false, false, false, "", "", true, 3, true, DEFAULT_SUBSCRIPTION_ID, context);
     }
 
     /**
@@ -81,6 +90,7 @@ public class Settings {
         this.sendLongAsMms = s.getSendLongAsMms();
         this.sendLongAsMmsAfter = s.getSendLongAsMmsAfter();
         this.subscriptionId = s.getSubscriptionId();
+        this.maxMessageSize = s.getMaxMessageSize();
     }
 
     /**
@@ -100,7 +110,7 @@ public class Settings {
     public Settings(String mmsc, String proxy, String port, boolean group,
                     boolean deliveryReports, boolean split, boolean splitCounter,
                     boolean stripUnicode, String signature, String preText, boolean sendLongAsMms,
-                    int sendLongAsMmsAfter, boolean useSystemSending, Integer subscriptionId) {
+                    int sendLongAsMmsAfter, boolean useSystemSending, Integer subscriptionId, Context context) {
         this.mmsc = mmsc;
         this.proxy = proxy;
         this.port = port;
@@ -119,6 +129,7 @@ public class Settings {
         setUseSystemSending(useSystemSending);
 
         this.subscriptionId = subscriptionId != null ? subscriptionId : DEFAULT_SUBSCRIPTION_ID;
+        this.context = new WeakReference<>(context);
     }
 
     /**
@@ -400,5 +411,20 @@ public class Settings {
     public static void setDebugLogging(boolean debugLogging, String path) {
         Log.setDebug(debugLogging);
         Log.setPath(path);
+    }
+
+    public void setMaxMessageSize(int maxMessageSize) {
+        this.maxMessageSize = maxMessageSize;
+        SharedPreferences prefs = context.get().getSharedPreferences(savedSettings, Context.MODE_PRIVATE);
+        prefs.edit().putInt(maxMessageSizePrefName, maxMessageSize).apply();
+    }
+
+    public int getMaxMessageSize() {
+        return maxMessageSize;
+    }
+
+    public static int staticGetMaxMessageSize() {
+        SharedPreferences prefs = context.get().getSharedPreferences(savedSettings, Context.MODE_PRIVATE);
+        return prefs.getInt(maxMessageSizePrefName, MmsConfig.getMaxMessageSize());
     }
 }
