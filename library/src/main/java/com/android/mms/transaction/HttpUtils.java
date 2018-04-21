@@ -44,6 +44,7 @@ import com.klinker.android.logger.Log;
 
 import com.android.mms.LogTag;
 import com.android.mms.MmsConfig;
+import com.klinker.android.send_message.Settings;
 
 public class HttpUtils {
     private static final String TAG = LogTag.TRANSACTION;
@@ -222,7 +223,7 @@ public class HttpUtils {
                     }
                     if (entity.isChunked()) {
                         Log.v(TAG, "httpConnection: transfer encoding is chunked");
-                        int bytesTobeRead = MmsConfig.getMaxMessageSize();
+                        int bytesTobeRead = Settings.staticGetMaxMessageSize();
                         byte[] tempBody = new byte[bytesTobeRead];
                         DataInputStream dis = new DataInputStream(entity.getContent());
                         try {

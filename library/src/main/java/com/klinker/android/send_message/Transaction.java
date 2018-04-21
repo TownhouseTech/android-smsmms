@@ -84,7 +84,7 @@ public class Transaction {
      * @param context is the context of the activity or service
      */
     public Transaction(Context context) {
-        this(context, new Settings());
+        this(context, new Settings(context));
     }
 
     /**
@@ -624,7 +624,7 @@ public class Transaction {
             if (!TextUtils.isEmpty(httpParams)) {
                 configOverrides.putString(SmsManager.MMS_CONFIG_HTTP_PARAMS, httpParams);
             }
-            configOverrides.putInt(SmsManager.MMS_CONFIG_MAX_MESSAGE_SIZE, MmsConfig.getMaxMessageSize());
+            configOverrides.putInt(SmsManager.MMS_CONFIG_MAX_MESSAGE_SIZE, settings.getMaxMessageSize());
 
             if (contentUri != null) {
                 SmsManagerFactory.createSmsManager(settings).sendMultimediaMessage(context,
