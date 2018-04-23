@@ -577,12 +577,6 @@ public class Transaction {
             if (messageChangedCallback != null)
                 messageChangedCallback.messageChanged(new MessageChangedCallback.MessageChangedInfo(true, originalId, threadId, messageId));
 
-            Intent message_id_changed = new Intent("message_id_changed");
-            message_id_changed.putExtra("original_id", originalId);
-            message_id_changed.putExtra("message_id", messageId);
-            message_id_changed.putExtra("is_mms", true);
-            context.sendBroadcast(message_id_changed);
-
             Intent intent = new Intent(MmsSentReceiver.MMS_SENT);
             intent.putExtra(MmsSentReceiver.EXTRA_CONTENT_URI, messageUri.toString());
             intent.putExtra(MmsSentReceiver.EXTRA_FILE_PATH, mSendFile.getPath());
