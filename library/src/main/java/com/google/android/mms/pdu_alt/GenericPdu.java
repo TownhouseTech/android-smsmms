@@ -40,6 +40,10 @@ public class GenericPdu {
         mPduHeaders = headers;
     }
 
+    public PduHeaders getmPduHeaders() {
+        return mPduHeaders;
+    }
+
     /**
      * Get the headers of this PDU.
      *
@@ -108,9 +112,5 @@ public class GenericPdu {
      */
     public void setFrom(EncodedStringValue value) {
         mPduHeaders.setEncodedStringValue(value, PduHeaders.FROM);
-    }
-
-    public EncodedStringValue getMessageId() {
-        return mPduHeaders.getEncodedStringValue(PduHeaders.MESSAGE_ID);
     }
 }
