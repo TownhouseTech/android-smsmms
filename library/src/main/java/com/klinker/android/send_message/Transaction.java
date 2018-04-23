@@ -171,17 +171,12 @@ public class Transaction {
 
                 values.put("thread_id", threadId);
                 messageUri = context.getContentResolver().insert(Uri.parse("content://sms/"), values);
+                messageId = Long.valueOf(messageUri.getLastPathSegment());
+                if (messageChangedCallback != null) {
+                    messageChangedCallback.messageChanged(new MessageChangedCallback.MessageChangedInfo(false, originalId, threadId, messageId));
+                }
 
                 Log.v("send_transaction", "inserted to uri: " + messageUri);
-
-                Cursor query = context.getContentResolver().query(messageUri, new String[] {"_id"}, null, null, null);
-                if (query != null && query.moveToFirst()) {
-                    messageId = query.getLong(0);
-                    query.close();
-                }
-                if (messageChangedCallback != null)
-                    messageChangedCallback.messageChanged(new MessageChangedCallback.MessageChangedInfo(false, originalId, threadId, messageId));
-
                 Log.v("send_transaction", "message id: " + messageId);
 
                 // set up sent and delivered pending intents to be used with message request
@@ -577,12 +572,7 @@ public class Transaction {
             Uri messageUri = persister.persist(sendReq, Uri.parse("content://mms/outbox"),
                     true, settings.getGroup(), null);
 
-            long messageId = 0;
-            Cursor query = context.getContentResolver().query(messageUri, new String[] {"_id"}, null, null, null);
-            if (query != null && query.moveToFirst()) {
-                messageId = query.getLong(0);
-                query.close();
-            }
+            long messageId = Long.parseLong(messageUri.getLastPathSegment());
 
             if (messageChangedCallback != null)
                 messageChangedCallback.messageChanged(new MessageChangedCallback.MessageChangedInfo(true, originalId, threadId, messageId));
