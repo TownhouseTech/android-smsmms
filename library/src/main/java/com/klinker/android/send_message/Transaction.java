@@ -171,17 +171,12 @@ public class Transaction {
 
                 values.put("thread_id", threadId);
                 messageUri = context.getContentResolver().insert(Uri.parse("content://sms/"), values);
+                messageId = Long.valueOf(messageUri.getLastPathSegment());
+                if (messageChangedCallback != null) {
+                    messageChangedCallback.messageChanged(new MessageChangedCallback.MessageChangedInfo(false, originalId, threadId, messageId));
+                }
 
                 Log.v("send_transaction", "inserted to uri: " + messageUri);
-
-                Cursor query = context.getContentResolver().query(messageUri, new String[] {"_id"}, null, null, null);
-                if (query != null && query.moveToFirst()) {
-                    messageId = query.getLong(0);
-                    query.close();
-                }
-                if (messageChangedCallback != null)
-                    messageChangedCallback.messageChanged(new MessageChangedCallback.MessageChangedInfo(false, originalId, threadId, messageId));
-
                 Log.v("send_transaction", "message id: " + messageId);
 
                 // set up sent and delivered pending intents to be used with message request
@@ -577,21 +572,10 @@ public class Transaction {
             Uri messageUri = persister.persist(sendReq, Uri.parse("content://mms/outbox"),
                     true, settings.getGroup(), null);
 
-            long messageId = 0;
-            Cursor query = context.getContentResolver().query(messageUri, new String[] {"_id"}, null, null, null);
-            if (query != null && query.moveToFirst()) {
-                messageId = query.getLong(0);
-                query.close();
-            }
+            long messageId = Long.parseLong(messageUri.getLastPathSegment());
 
             if (messageChangedCallback != null)
                 messageChangedCallback.messageChanged(new MessageChangedCallback.MessageChangedInfo(true, originalId, threadId, messageId));
-
-            Intent message_id_changed = new Intent("message_id_changed");
-            message_id_changed.putExtra("original_id", originalId);
-            message_id_changed.putExtra("message_id", messageId);
-            message_id_changed.putExtra("is_mms", true);
-            context.sendBroadcast(message_id_changed);
 
             Intent intent = new Intent(MmsSentReceiver.MMS_SENT);
             intent.putExtra(MmsSentReceiver.EXTRA_CONTENT_URI, messageUri.toString());

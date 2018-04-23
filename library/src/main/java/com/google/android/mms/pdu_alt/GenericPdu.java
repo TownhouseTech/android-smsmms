@@ -40,6 +40,10 @@ public class GenericPdu {
         mPduHeaders = headers;
     }
 
+    public PduHeaders getmPduHeaders() {
+        return mPduHeaders;
+    }
+
     /**
      * Get the headers of this PDU.
      *
