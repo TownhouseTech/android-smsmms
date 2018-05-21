@@ -185,8 +185,8 @@ public class Transaction {
                 if (originalId != 0)
                     sentIntent.putExtra("original_message_id", originalId);
 
-                PendingIntent sentPI = PendingIntent.getBroadcast(context, (int)messageId, new Intent(SMS_SENT)
-                        .putExtra("message_uri", messageUri == null ? "" : messageUri.toString()), PendingIntent.FLAG_UPDATE_CURRENT);
+                Intent sentIntent2 = BroadcastUtils.getExplicitBroadcastIntent(context, new Intent(SMS_SENT).putExtra("message_uri", messageUri == null ? "" : messageUri.toString()), SMS_SENT);
+                PendingIntent sentPI = PendingIntent.getBroadcast(context, (int)messageId, sentIntent2, PendingIntent.FLAG_UPDATE_CURRENT);
                 PendingIntent deliveredPI = PendingIntent.getBroadcast(context, (int)messageId, new Intent(SMS_DELIVERED)
                         .putExtra("message_uri", messageUri == null ? "" : messageUri.toString()), PendingIntent.FLAG_UPDATE_CURRENT);
 
