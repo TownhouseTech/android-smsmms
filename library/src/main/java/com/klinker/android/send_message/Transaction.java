@@ -368,7 +368,7 @@ public class Transaction {
             final String fileName = "send." + String.valueOf(Math.abs(new Random().nextLong())) + ".dat";
             File mSendFile = new File(context.getCacheDir(), fileName);
 
-            SendReq sendReq = buildPdu(context, addresses, subject, parts);
+            SendReq sendReq = buildPdu(context, addresses, subject, data);
             PduPersister persister = PduPersister.getPduPersister(context);
             Uri messageUri = persister.persist(sendReq, Uri.parse("content://mms/outbox"),
                     true, settings.getGroup(), null);
