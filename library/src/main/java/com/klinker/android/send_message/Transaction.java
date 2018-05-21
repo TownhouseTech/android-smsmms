@@ -364,78 +364,22 @@ public class Transaction {
             }
         }
 
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
-            MessageInfo info = null;
+        Log.v(TAG, "using lollipop method for sending sms");
 
-            try {
-                info = getBytes(context, saveMessage, address.split(" "),
-                        data.toArray(new MMSPart[data.size()]), subject);
-                MmsMessageSender sender = new MmsMessageSender(context, info.location, info.bytes.length);
-                sender.sendMessage(info.token);
-
-                IntentFilter filter = new IntentFilter();
-                filter.addAction(ProgressCallbackEntity.PROGRESS_STATUS_ACTION);
-                final Uri contentUri = info.location;
-                BroadcastReceiver receiver = new BroadcastReceiver() {
-
-                    @Override
-                    public void onReceive(Context context, Intent intent) {
-                        int progress = intent.getIntExtra("progress", -3);
-                        Log.v("sending_mms_library", "progress: " + progress);
-
-                        // send progress broadcast to update ui if desired...
-                        Intent progressIntent = new Intent(MMS_PROGRESS);
-                        progressIntent.putExtra("progress", progress);
-                        context.sendBroadcast(progressIntent);
-
-                        if (progress == ProgressCallbackEntity.PROGRESS_COMPLETE) {
-                            context.sendBroadcast(new Intent(REFRESH));
-
-                            //adding a new broadcast for kitkat mms
-                            Intent mmsDone = new Intent("com.klinker.android.messaging.MMS_SENT");
-                            mmsDone.putExtra("content_uri", contentUri.toString());
-                            mmsDone.putExtra("file_path", "");
-                            mmsDone = BroadcastUtils.getExplicitBroadcastIntent(context, mmsDone, "com.klinker.android.messaging.MMS_SENT");
-                            context.sendBroadcast(mmsDone);
-
-                            try {
-                                context.unregisterReceiver(this);
-                            } catch (Exception e) {
-                                // TODO fix me
-                                // receiver is not registered force close error... hmm.
-                            }
-                        } else if (progress == ProgressCallbackEntity.PROGRESS_ABORT) {
-                            // This seems to get called only after the progress has reached 100 and
-                            // then something else goes wrong, so here we will try and send again
-                            // and see if it works
-                            Log.v("sending_mms_library", "sending aborted for some reason...");
-                        }
-                    }
-
-                };
-
-                context.registerReceiver(receiver, filter);
-            } catch (Throwable e) {
-                Log.e(TAG, "exception thrown", e);
-            }
+        if (settings.getUseSystemSending()) {
+            Log.v(TAG, "using system method for sending");
+            sendMmsThroughSystem(context, subject, data, addresses, originalId);
         } else {
-            Log.v(TAG, "using lollipop method for sending sms");
-
-            if (settings.getUseSystemSending()) {
-                Log.v(TAG, "using system method for sending");
-                sendMmsThroughSystem(context, subject, data, addresses, originalId);
-            } else {
-                try {
-                    MessageInfo info = getBytes(context, saveMessage, address.split(" "),
-                            data.toArray(new MMSPart[data.size()]), subject);
-                    MmsRequestManager requestManager = new MmsRequestManager(context, info.bytes);
-                    SendRequest request = new SendRequest(requestManager, Utils.getDefaultSubscriptionId(),
-                            info.location, null, null, null, null);
-                    MmsNetworkManager manager = new MmsNetworkManager(context, Utils.getDefaultSubscriptionId());
-                    request.execute(context, manager);
-                } catch (Exception e) {
-                    Log.e(TAG, "error sending mms", e);
-                }
+            try {
+                MessageInfo info = getBytes(context, saveMessage, address.split(" "),
+                        data.toArray(new MMSPart[data.size()]), subject);
+                MmsRequestManager requestManager = new MmsRequestManager(context, info.bytes);
+                SendRequest request = new SendRequest(requestManager, Utils.getDefaultSubscriptionId(),
+                        info.location, null, null, null, null);
+                MmsNetworkManager manager = new MmsNetworkManager(context, Utils.getDefaultSubscriptionId());
+                request.execute(context, manager);
+            } catch (Exception e) {
+                Log.e(TAG, "error sending mms", e);
             }
         }
     }
@@ -584,6 +528,8 @@ public class Transaction {
             Intent intent = new Intent(MmsSentReceiver.MMS_SENT);
             intent.putExtra(MmsSentReceiver.EXTRA_CONTENT_URI, messageUri.toString());
             intent.putExtra(MmsSentReceiver.EXTRA_FILE_PATH, mSendFile.getPath());
+            intent = BroadcastUtils.getExplicitBroadcastIntent(context, intent, MmsSentReceiver.MMS_SENT);
+            
             final PendingIntent pendingIntent = PendingIntent.getBroadcast(
                     context, (int)messageId, intent, PendingIntent.FLAG_CANCEL_CURRENT);
 
