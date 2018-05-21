@@ -40,6 +40,7 @@ import com.google.android.mms.pdu_alt.PduParser;
 import com.google.android.mms.pdu_alt.PduPersister;
 import com.google.android.mms.pdu_alt.RetrieveConf;
 import com.google.android.mms.util_alt.SqliteWrapper;
+import com.klinker.android.send_message.BroadcastUtils;
 
 /**
  * Request to download an MMS
@@ -212,6 +213,7 @@ public class DownloadRequest extends MmsRequest {
             // send broadcast to notify that all MMS parts have downloaded
             Intent mmsPartsDownloadedBroadcast = new Intent(com.klinker.android.send_message.Transaction.NOTIFY_OF_MMS_PARTS_DOWNLOADED);
             mmsPartsDownloadedBroadcast.putExtra("messageUri", messageUri.toString());
+            BroadcastUtils.getExplicitBroadcastIntent(context, mmsPartsDownloadedBroadcast, com.klinker.android.send_message.Transaction.NOTIFY_OF_MMS_PARTS_DOWNLOADED);
             context.sendBroadcast(mmsPartsDownloadedBroadcast);
 
             return messageUri;
