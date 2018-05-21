@@ -184,11 +184,14 @@ public class Transaction {
                         .putExtra("message_uri", messageUri == null ? "" : messageUri.toString());
                 if (originalId != 0)
                     sentIntent.putExtra("original_message_id", originalId);
+                sentIntent = BroadcastUtils.getExplicitBroadcastIntent(context, sentIntent, SMS_SENT);
+                PendingIntent sentPI = PendingIntent.getBroadcast(context, (int)messageId, sentIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-                Intent sentIntent2 = BroadcastUtils.getExplicitBroadcastIntent(context, new Intent(SMS_SENT).putExtra("message_uri", messageUri == null ? "" : messageUri.toString()), SMS_SENT);
-                PendingIntent sentPI = PendingIntent.getBroadcast(context, (int)messageId, sentIntent2, PendingIntent.FLAG_UPDATE_CURRENT);
-                PendingIntent deliveredPI = PendingIntent.getBroadcast(context, (int)messageId, new Intent(SMS_DELIVERED)
-                        .putExtra("message_uri", messageUri == null ? "" : messageUri.toString()), PendingIntent.FLAG_UPDATE_CURRENT);
+                Intent deliveredIntent = new Intent(SMS_DELIVERED)
+                        .putExtra("message_uri", messageUri == null ? "" : messageUri.toString());
+                deliveredIntent = BroadcastUtils.getExplicitBroadcastIntent(context, deliveredIntent, SMS_DELIVERED);
+
+                PendingIntent deliveredPI = PendingIntent.getBroadcast(context, (int)messageId, deliveredIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
                 ArrayList<PendingIntent> sPI = new ArrayList<PendingIntent>();
                 ArrayList<PendingIntent> dPI = new ArrayList<PendingIntent>();
@@ -392,6 +395,7 @@ public class Transaction {
                             Intent mmsDone = new Intent("com.klinker.android.messaging.MMS_SENT");
                             mmsDone.putExtra("content_uri", contentUri.toString());
                             mmsDone.putExtra("file_path", "");
+                            mmsDone = BroadcastUtils.getExplicitBroadcastIntent(context, mmsDone, "com.klinker.android.messaging.MMS_SENT");
                             context.sendBroadcast(mmsDone);
 
                             try {
